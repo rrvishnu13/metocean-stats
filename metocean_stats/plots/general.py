@@ -582,3 +582,131 @@ def plot_nb_hours_below_threshold(df,var='hs',thr_arr=(np.arange(0.05,20.05,0.05
     del ax
     return fig
 
+
+def plot_daily_stats(data:pd.DataFrame,
+                     var:str,
+                     show=["min","25%","max"],
+                     fill_between:list[str]=[],
+                     fill_color_like = "",
+                     title = "",
+                     cmap = plt.get_cmap("viridis"),
+                     output_file:str="daily_stats.png",
+                     month_xticks=True, ax = None):
+    '''
+    Plot daily statistics of a DataFrame variable.
+    
+    Arguments
+    ---------
+    data : pd.DataFrame
+        The dataframe.
+    var : str
+        A column of the dataframe.
+    show : list[str]
+        List of percentiles/statistics to include. Options are: "min","mean","0%","1%",...,"100%","max".
+    fill_between : [str,str]
+        Optional: Set a shaded area between two percentiles (any options from the "show" argument).
+    fill_color_like : str
+        Optional: Color the shaded area like any item from "show" argument, e.g. fill_color_like = "mean".
+    month_xticks : bool
+        Set months as xtick labels.
+    title : str
+        Title of the plot.
+    output_file : str
+        File path for saved figure.    
+    
+    Returns
+    --------
+    fig : Figure
+        Matplotlib figure object.
+    '''
+    if ax is None:
+        fig, ax = plt.subplots()
+    else:
+        fig = ax.get_figure()
+    plt.sca(ax)
+
+    percentiles = data[var].groupby(data[var].index.dayofyear).describe(percentiles=np.arange(0,1,0.01))
+    xaxis = np.arange(0,data[var].index.dayofyear.max())
+    
+    labels = [s for s in show]
+    if fill_between: labels += [fill_between[0]+"-"+fill_between[1]]
+    show = _percentile_str_to_pd_format(show)
+    fill_between = _percentile_str_to_pd_format(fill_between)
+    fill_color_like = _percentile_str_to_pd_format(fill_color_like)
+
+    colors = cmap(np.linspace(0,1,len(show)))
+    for i,v in enumerate(show):
+        percentiles[v].plot(color=colors[i])
+
+    if fill_between != []:
+        if fill_color_like != "":
+            fill_color = colors[np.where(fill_color_like==np.array(show))[0][0]]
+            plt.fill_between(xaxis+1,percentiles[fill_between[0]],percentiles[fill_between[1]],alpha=0.25,color=fill_color)
+        else:
+            plt.fill_between(xaxis+1,percentiles[fill_between[0]],percentiles[fill_between[1]],alpha=0.25)
+    
+    if month_xticks:
+        ax.xaxis.set_major_locator(MonthLocator(bymonthday=1,bymonth=range(1,13)))
+        ax.xaxis.set_major_formatter(DateFormatter('%b'))
+
+    plt.title(title,fontsize=14)
+    plt.xlabel('Month',fontsize=12)
+    plt.legend(labels)
+    plt.grid()
+    if output_file != "": plt.savefig(output_file)
+    return ax
+
+
+
+def plot_dailyVar_stats(data:pd.DataFrame,
+                     var:str,
+                     cmap = plt.get_cmap("coolwarm"),
+                     month_xticks=True,
+                     ax = None,
+                     normaliseDays = False,
+                     normaliseHours = False):
+    
+    '''
+    Plot variation of a variable over the day of the year and the hour of the day in 2D heatmap.
+    '''
+
+
+
+    df = data[[var]].copy()
+    df['day_of_year'] = df.index.day_of_year.values
+    df['hour'] = df.index.hour
+    average_df = df.groupby(['day_of_year', 'hour'])[var].mean().reset_index()
+    heatmap_data = average_df.pivot(index='hour', columns='day_of_year', values=var)
+
+
+    if normaliseDays:
+        maxVal = heatmap_data.max(axis = 0)
+        minVal = heatmap_data.min(axis = 0)
+        heatmap_data = (heatmap_data - minVal) / (maxVal - minVal)
+
+    if normaliseHours:
+        maxVal = heatmap_data.max(axis = 1)
+        minVal = heatmap_data.min(axis = 1)
+        heatmap_data = ((heatmap_data.T - minVal) / (maxVal - minVal)).T
+
+
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize=(25, 8))
+    
+    sns.heatmap(
+        heatmap_data,
+        cmap=cmap,
+        cbar_kws={'label': 'Windspeed (m/s)' if ((not normaliseDays) and (not normaliseHours)) else 'Normalised windspeed'},
+        # xticklabels=30,  # Show every 30th day
+        yticklabels=2,    # Show every 3rd hour
+        ax=ax
+    )
+
+    ax.set_xlabel('Day of year')
+    ax.set_ylabel('Hour of day')
+
+    if month_xticks:
+        ax.xaxis.set_major_locator(MonthLocator(bymonthday=1,bymonth=range(1,13)))
+        ax.xaxis.set_major_formatter(DateFormatter('%b'))
+
+    return ax
