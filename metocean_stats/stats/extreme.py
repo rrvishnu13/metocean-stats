@@ -632,8 +632,11 @@ def joint_distribution_Hs_Tp(data,var_hs='hs',var_tp='tp',periods=[1,10,100,1000
     
     param = Weibull_method_of_moment(df.hs.values) #stats.weibull_min.fit(df.hs.values) # shape, loc, scale
     pdf_Hs2 = stats.weibull_min.pdf(h, param[0], loc=param[1], scale=param[2])
+
     
-    
+
+
+
     # Find the index where two PDF cut, between P60 and P99 
     for i in range(len(h)):
         if abs(h[i]-np.percentile(df.hs.values,60)) < 0.1:
@@ -641,7 +644,14 @@ def joint_distribution_Hs_Tp(data,var_hs='hs',var_tp='tp',periods=[1,10,100,1000
             
         if abs(h[i]-np.percentile(df.hs.values,99)) < 0.1:
             i2=i
-            
+    
+    # plt.plot(h, pdf_Hs2, label = 'weibull')
+    # plt.plot(h, pdf_Hs1, label = 'longnorm')
+    # plt.legend()    
+    # plt.axvline(x = h[i1])
+    # plt.axvline(x = h[i2])
+    
+    
     epsilon=abs(pdf_Hs1[i1:i2]-pdf_Hs2[i1:i2])
     param = find_peaks(1/epsilon)
     try:
@@ -652,7 +662,9 @@ def joint_distribution_Hs_Tp(data,var_hs='hs',var_tp='tp',periods=[1,10,100,1000
         except:
             index = np.where(epsilon == epsilon.min())[0]
     index = index + i1
-        
+    
+    # plt.plot(h[index], 0, 'ro')
+    
     # Merge two functions and do smoothing around the cut 
     eta = h[index]
     pdf_Hs = h*0
@@ -682,7 +694,7 @@ def joint_distribution_Hs_Tp(data,var_hs='hs',var_tp='tp',periods=[1,10,100,1000
     elif maxHs>=4 and maxHs<10 :
         intx=0.5
     else : 
-        intx=1.0;
+        intx=1.0
     
     mean_hs = []
     variance_lnTp = []

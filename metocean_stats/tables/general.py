@@ -77,8 +77,8 @@ def scatter_diagram(data: pd.DataFrame, var1: str, step_var1: float, var2: str, 
         plt.tight_layout()
         plt.savefig(output_file)
         plt.close()
-    else:
-        print(f"Unsupported file type: {output_file.suffix}")
+    # else:
+    #     print(f"Unsupported file type: {output_file.suffix}")
 
     return dfout
 

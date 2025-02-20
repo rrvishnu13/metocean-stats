@@ -122,12 +122,17 @@ def Hs_Tp_curve(data,pdf_Hs,pdf_Hs_Tp,f_Hs_Tp,h,t,interval,X=100):
         period=X*365.2422*24/interval
     rve_X = stats.weibull_min.isf(1/period, shape, loc, scale)
     
+    h1=[]
+    t1=[]
+    t2=[]
+    
     # Find index of Hs=value
     epsilon = abs(h - rve_X)
     param, prov = find_peaks(1/epsilon) # to find the index of bottom
     if len(param) == 0:
         param = [np.argmax(1/epsilon)] 
     index = param[0]     # the  index of Hs=value
+    # h1.append(h[index])
     
     # Find peak of pdf at Hs=RVE of X year 
     pdf_Hs_Tp_X = pdf_Hs_Tp[index,:] # Find pdf at RVE of X year 
@@ -136,11 +141,10 @@ def Hs_Tp_curve(data,pdf_Hs,pdf_Hs_Tp,f_Hs_Tp,h,t,interval,X=100):
         param = [np.argmax(pdf_Hs_Tp_X)] 
     index = param[0]
     f_Hs_Tp_100=pdf_Hs_Tp_X[index]
-
+    # t1.append(t[index])
+    # t2.append(t[index])
     
-    h1=[]
-    t1=[]
-    t2=[]
+
     for i in range(len(h)):
         f3_ = f_Hs_Tp_100/pdf_Hs[i]
         f3 = f_Hs_Tp[i,:]
@@ -178,10 +182,16 @@ def Gauss4(x, b2, b3):
     return y
 
 
-def DVN_steepness(df,h,t,periods,interval):
+def DVN_steepness(df,h,t,periods,interval):  
+    '''
+    DNV RP C205 
+    Sp = 1/15 for Tp <= 8 s
+    Sp = 1/25 for Tp >= 15 s
+    '''
+
     import scipy.stats as stats
     ## steepness 
-    max_y=max(periods)
+    max_y=max(periods) #get the maximum return period requested 
     X = max_y # get max 500 year 
     period=X*365.2422*24/interval
     shape, loc, scale = Weibull_method_of_moment(df.hs.values) # shape, loc, scale
@@ -204,11 +214,11 @@ def DVN_steepness(df,h,t,periods,interval):
                 t1.append(t[j])
         
             j8=j # t=8
-            h1_t8=temp
+            h1_t8=temp #storing the Hs values at t = 8 and t = 15 -> so that the values can be interpolated 
             t8=t[j]
         elif t[j]>=15 :
             Sp=1/25 
-            temp = Sp * g * t[j]**2 /(2*np.pi)
+            temp = Sp * g * t[j]**2 /(2*np.pi) #max Hs based on the steepness criteria
             if temp <= rve_X:
                 h3.append(temp)
                 t3.append(t[j])

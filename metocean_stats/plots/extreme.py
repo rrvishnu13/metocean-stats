@@ -662,7 +662,7 @@ def plot_multi_joint_distribution_Hs_Tp_var3(data,var_hs='hs',var_tp='tp',var3='
 
 ##################
 
-def plot_joint_distribution_Hs_Tp(data,var_hs='hs',var_tp='tp',periods=[1,10,100,10000], title='Hs-Tp joint distribution',output_file='Hs.Tp.joint.distribution.png',density_plot=False):
+def plot_joint_distribution_Hs_Tp(data,var_hs='hs',var_tp='tp',periods=[1,10,100,10000], title='Hs-Tp joint distribution',output_file='Hs.Tp.joint.distribution.png',density_plot=False, ax = None):
     a1, a2, a3, b1, b2, b3, pdf_Hs, h, t3,h3,X,hs_tpl_tph = joint_distribution_Hs_Tp(data=data,var_hs=var_hs,var_tp=var_tp,periods=periods)
     df = data
     # calculate pdf Hs, Tp 
@@ -682,11 +682,16 @@ def plot_joint_distribution_Hs_Tp(data,var_hs='hs',var_tp='tp',periods=[1,10,100
     
     interval = ((df.index[-1]-df.index[0]).days + 1)*24/df.shape[0] # in hours 
     t_steepness, h_steepness = DVN_steepness(df,h,t,periods,interval)
-    percentile05 = find_percentile(df.hs.values,pdf_Hs_Tp,h,t,5,periods,interval)
-    percentile50 = find_percentile(df.hs.values,pdf_Hs_Tp,h,t,50,periods,interval)
-    percentile95 = find_percentile(df.hs.values,pdf_Hs_Tp,h,t,95,periods,interval)
+    # percentile05 = find_percentile(df.hs.values,pdf_Hs_Tp,h,t,5,periods,interval)
+    # percentile50 = find_percentile(df.hs.values,pdf_Hs_Tp,h,t,50,periods,interval)
+    # percentile95 = find_percentile(df.hs.values,pdf_Hs_Tp,h,t,95,periods,interval)
     
-    fig, ax = plt.subplots(figsize=(8,6))
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(8,6))
+    else:
+        fig = ax.get_figure()
+        plt.sca(ax)
+        
     df = df[df['hs'] >= 0.1]
     if density_plot is False: 
         plt.scatter(df.tp.values,df.hs.values,c='red',label='data',s=3)
@@ -703,9 +708,9 @@ def plot_joint_distribution_Hs_Tp(data,var_hs='hs',var_tp='tp',periods=[1,10,100
 
     plt.plot(t_steepness,h_steepness,'k--',label='steepness')
     
-    plt.plot(percentile50[0],percentile50[1],'g',label='Tp-mean',linewidth=5)
-    plt.plot(percentile05[0],percentile05[1],'g:',label='Tp-5%',linewidth=2)
-    plt.plot(percentile95[0],percentile95[1],'g--',label='Tp-95%',linewidth=2)
+    # plt.plot(percentile50[0],percentile50[1],'g',label='Tp-mean',linewidth=5)
+    # plt.plot(percentile05[0],percentile05[1],'g:',label='Tp-5%',linewidth=2)
+    # plt.plot(percentile95[0],percentile95[1],'g--',label='Tp-95%',linewidth=2)
 
     plt.xlabel('Tp - Peak Period [s]')
     plt.suptitle(title)
@@ -716,7 +721,7 @@ def plot_joint_distribution_Hs_Tp(data,var_hs='hs',var_tp='tp',periods=[1,10,100
     plt.ylim([0,np.round(hs_tpl_tph['hs_'+str(np.max(periods))].max()+1)])
     plt.savefig(output_file,dpi=100,facecolor='white',bbox_inches='tight')
     
-    return fig
+    return fig, t3, h3
 
 def plot_bounds(file='NORA10_6036N_0336E.1958-01-01.2022-12-31.txt'):
     from metocean_stats.stats import general_stats, extreme_stats, dir_stats, aux_funcs
@@ -900,7 +905,7 @@ def plot_prob_non_exceedance_fitted_3p_weibull(data, var='hs', output_file='plot
     plt.tight_layout()
     
     plt.savefig(output_file)
-    plt.close()
+    # plt.close()
 
     return fig
 
