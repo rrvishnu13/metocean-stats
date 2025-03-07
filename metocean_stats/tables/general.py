@@ -51,9 +51,9 @@ def scatter_diagram(data: pd.DataFrame, var1: str, step_var1: float, var2: str, 
         rows.append(f'{bins_var1[i]:04.1f}-{bins_var1[i+1]:04.1f} | {sumrows[i+1]:04.2f}%')
 
     cols = []
-    cols.append(f'{int(lower_bin_2)}-{int(bins_var2[0])} | {sumcols[0]:04.2f}%')
+    cols.append(f'{lower_bin_2:.1f}-{bins_var2[0]:.1f} | {sumcols[0]:04.2f}%')
     for i in range(len(bins_var2)-1):
-        cols.append(f'{int(bins_var2[i])}-{int(bins_var2[i+1])} | {sumcols[i+1]:04.2f}%')
+        cols.append(f'{bins_var2[i]:.1f}-{bins_var2[i+1]:.1f} | {sumcols[i+1]:04.2f}%')
 
     #breakpoint()
     #cols.insert(0,var1+' / '+var2 )

@@ -44,7 +44,7 @@ def var_rose(data,
     direction2 = data[direction]
     intensity2 = data[intensity]
     size = 5
-    bins_range = np.array([0, np.percentile(intensity2,40),
+    bins_range = np.array([np.min(intensity2), np.percentile(intensity2,40),
                    np.percentile(intensity2,60),
                    np.percentile(intensity2,80),
                    np.percentile(intensity2,99)])
